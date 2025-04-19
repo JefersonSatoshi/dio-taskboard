@@ -1,15 +1,13 @@
 --liquibase formatted sql
 --changeset satoshi:202504191559
---comment: blocks table create
- 
- CREATE TABLE BLOCKS(
+--comment: cards table create
+
+CREATE TABLE CARDS(
      id BIGINT AUTO_INCREMENT PRIMARY KEY,
-     block_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-     block_reason VARCHAR(255) NOT NULL,
-     unblock_at TIMESTAMP NULL,
-     unblock_reason VARCHAR(255) NOT NULL,
-     card_id BIGINT NOT NULL,
-     CONSTRAINT cards__blocks_fk FOREIGN KEY (card_id) REFERENCES CARDS(id) ON DELETE CASCADE
+     title VARCHAR(255) NOT NULL,
+     description VARCHAR(255) NOT NULL,
+     board_column_id BIGINT NOT NULL,
+     CONSTRAINT boards_columns__cards_fk FOREIGN KEY (board_column_id) REFERENCES BOARDS_COLUMNS(id) ON DELETE CASCADE
  ) ENGINE=InnoDB;
  
- --rollback DROP TABLE BLOCKS
+ --rollback DROP TABLE CARDS
