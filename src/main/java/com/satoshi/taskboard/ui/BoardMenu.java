@@ -1,47 +1,55 @@
 package com.satoshi.taskboard.ui;
 
+import java.sql.SQLException;
 import java.util.Scanner;
 
+import com.satoshi.taskboard.persistence.config.ConnectionConfig;
 import com.satoshi.taskboard.persistence.entity.BoardEntity;
+import com.satoshi.taskboard.service.BoardQueryService;
 
 import lombok.AllArgsConstructor;
 
 @AllArgsConstructor
 public class BoardMenu {
 	
-	private final Scanner scanner = new Scanner(System.in);
+	private final Scanner scanner = new Scanner(System.in).useDelimiter("\n");
     
     private final BoardEntity entity;
 
     public void execute() {
     	
-    	System.out.printf("Bem vindo ao board %s, selecione a operação desejada", entity.getId());
-        var option = -1;
-        while (option != 9) {
-            System.out.println("1 - Criar um card");
-            System.out.println("2 - Mover um card");
-            System.out.println("3 - Bloquear um card");
-            System.out.println("4 - Desbloquear um card");
-            System.out.println("5 - Cancelar um card");
-            System.out.println("6 - Ver board");
-            System.out.println("7 - Ver coluna com cards");
-            System.out.println("8 - Ver card");
-            System.out.println("9 - Voltar para o menu anterior um card");
-            System.out.println("10 - Sair");
-            option = scanner.nextInt();
-            switch (option) {
-                case 1 -> createCard();
-                case 2 -> moveCardToNextColumn();
-                case 3 -> blockCard();
-                case 4 -> unblockCard();
-                case 5 -> cancelCard();
-                case 6 -> showBoard();
-                case 7 -> showColumn();
-                case 8 -> showCard();
-                case 9 -> System.out.println("Voltando para o menu anterior");
-                case 10 -> System.exit(0);
-                default -> System.out.println("Opção inválida, informe uma opção do menu");
+    	try {
+            System.out.printf("Bem vindo ao board %s, selecione a operação desejada", entity.getId());
+            var option = -1;
+            while (option != 9) {
+                System.out.println("1 - Criar um card");
+                System.out.println("2 - Mover um card");
+                System.out.println("3 - Bloquear um card");
+                System.out.println("4 - Desbloquear um card");
+                System.out.println("5 - Cancelar um card");
+                System.out.println("6 - Ver board");
+                System.out.println("7 - Ver coluna com cards");
+                System.out.println("8 - Ver card");
+                System.out.println("9 - Voltar para o menu anterior um card");
+                System.out.println("10 - Sair");
+                option = scanner.nextInt();
+                switch (option) {
+                    case 1 -> createCard();
+                    case 2 -> moveCardToNextColumn();
+                    case 3 -> blockCard();
+                    case 4 -> unblockCard();
+                    case 5 -> cancelCard();
+                    case 6 -> showBoard();
+                    case 7 -> showColumn();
+                    case 8 -> showCard();
+                    case 9 -> System.out.println("Voltando para o menu anterior");
+                    case 10 -> System.exit(0);
+                    default -> System.out.println("Opção inválida, informe uma opção do menu");
+                }
             }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            System.exit(0);
         }
     }
 
@@ -61,6 +69,25 @@ public class BoardMenu {
     }
 
     private void showBoard() {
+        try (var connection = ConnectionConfig.getConnection()) {
+            var service = new BoardQueryService(connection);
+            var optional = service.showBoardDetails(entity.getId());
+
+            optional.ifPresent(board -> {
+                System.out.printf("Board [%d, %s]%n", board.id(), board.name());
+
+                board.columns().forEach(column -> 
+                    System.out.printf(" → Coluna [%s] | Tipo: [%s] | %d cards%n",
+                        column.name(),
+                        column.kind(),
+                        column.cardsAmount())
+                );
+            });
+
+        } catch (SQLException e) {
+            System.err.println("Erro ao mostrar o board: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 
     private void showColumn() {
