@@ -5,6 +5,7 @@ import static com.satoshi.taskboard.persistence.config.ConnectionConfig.getConne
 import java.sql.SQLException;
 
 import com.satoshi.taskboard.persistence.migration.MigrationStrategy;
+import com.satoshi.taskboard.ui.MainMenu;
 
 public class Main {
 
@@ -12,6 +13,7 @@ public class Main {
 		try(var connection = getConnection()){
 			new MigrationStrategy(connection).executeMigration();
 		}
+		 new MainMenu().execute();
 	}
 
 }
