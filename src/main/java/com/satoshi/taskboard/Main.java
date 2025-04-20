@@ -9,11 +9,10 @@ import com.satoshi.taskboard.ui.MainMenu;
 
 public class Main {
 
-	public static void main(String[] args) throws SQLException {
-		try(var connection = getConnection()){
-			new MigrationStrategy(connection).executeMigration();
-		}
-		 new MainMenu().execute();
-	}
-
+    public static void main(String[] args) throws SQLException {
+        try(var connection = getConnection()){
+            new MigrationStrategy(connection).executeMigration();
+        }
+        new MainMenu().execute();
+    }
 }
