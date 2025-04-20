@@ -1,14 +1,18 @@
 package com.satoshi.taskboard.ui;
 
+import static com.satoshi.taskboard.persistence.config.ConnectionConfig.getConnection;
+
 import java.sql.SQLException;
 import java.util.Scanner;
 
 import com.satoshi.taskboard.persistence.config.ConnectionConfig;
 import com.satoshi.taskboard.persistence.entity.BoardColumnEntity;
 import com.satoshi.taskboard.persistence.entity.BoardEntity;
+import com.satoshi.taskboard.persistence.entity.CardEntity;
 import com.satoshi.taskboard.service.BoardColumnQueryService;
 import com.satoshi.taskboard.service.BoardQueryService;
 import com.satoshi.taskboard.service.CardQueryService;
+import com.satoshi.taskboard.service.CardService;
 
 import lombok.AllArgsConstructor;
 
@@ -22,7 +26,7 @@ public class BoardMenu {
     public void execute() {
     	
     	try {
-            System.out.printf("Bem vindo ao board %s, selecione a operação desejada", entity.getId());
+    		System.out.printf("Bem vindo ao board %s, selecione a operação desejada\n", entity.getId());
             var option = -1;
             while (option != 9) {
                 System.out.println("1 - Criar um card");
@@ -56,7 +60,16 @@ public class BoardMenu {
         }
     }
 
-    private void createCard() {
+    private void createCard() throws SQLException{
+        var card = new CardEntity();
+        System.out.println("Informe o título do card");
+        card.setTitle(scanner.next());
+        System.out.println("Informe a descrição do card");
+        card.setDescription(scanner.next());
+        card.setBoardColumn(entity.getInitialColumn());
+        try(var connection = getConnection()){
+            new CardService(connection).create(card);
+        }
     }
 
     private void moveCardToNextColumn() {
@@ -95,14 +108,14 @@ public class BoardMenu {
 
     private void showColumn() throws SQLException {
         var columnsIds = entity.getBoardColumns().stream().map(BoardColumnEntity::getId).toList();
-        var selectedColumn = -1L;
-        while (!columnsIds.contains(selectedColumn)){
-            System.out.printf("Escolha uma coluna do board %s\n", entity.getName());
+        var selectedColumnId = -1L;
+        while (!columnsIds.contains(selectedColumnId)){
+            System.out.printf("Escolha uma coluna do board %s pelo id\n", entity.getName());
             entity.getBoardColumns().forEach(c -> System.out.printf("%s - %s [%s]\n", c.getId(), c.getName(), c.getKind()));
-            selectedColumn = scanner.nextLong();
+            selectedColumnId = scanner.nextLong();
         }
         try(var connection = ConnectionConfig.getConnection()){
-            var column = new BoardColumnQueryService(connection).findById(selectedColumn);
+        	var column = new BoardColumnQueryService(connection).findById(selectedColumnId);
             column.ifPresent(co -> {
                 System.out.printf("Coluna %s tipo %s\n", co.getName(), co.getKind());
                 co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
@@ -123,7 +136,7 @@ public class BoardMenu {
                                 System.out.println(c.blocked() ?
                                         "Está bloqueado. Motivo: " + c.blockReason() :
                                         "Não está bloqueado");
-                                System.out.printf("Já foi bloqueado %s vezes", c.blocksAmount());
+                                System.out.printf("Já foi bloqueado %s vezes\n", c.blocksAmount());
                                 System.out.printf("Está no momento na coluna %s - %s\n", c.columnId(), c.columnName());
                             },
                             () -> System.out.printf("Não existe um card com o id %s\n", selectedCardId));
