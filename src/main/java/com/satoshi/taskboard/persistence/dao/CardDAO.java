@@ -81,4 +81,14 @@ public class CardDAO {
         }
         return Optional.empty();
     }
+    
+    public void moveToColumn(final Long columnId, final Long cardId) throws SQLException{
+        var sql = "UPDATE CARDS SET board_column_id = ? WHERE id = ?;";
+        try(var statement = connection.prepareStatement(sql)){
+            var i = 1;
+            statement.setLong(i ++, columnId);
+            statement.setLong(i, cardId);
+            statement.executeUpdate();
+        }
+    }
 }

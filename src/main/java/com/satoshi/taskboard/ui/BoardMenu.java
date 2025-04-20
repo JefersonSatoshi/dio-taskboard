@@ -5,6 +5,7 @@ import static com.satoshi.taskboard.persistence.config.ConnectionConfig.getConne
 import java.sql.SQLException;
 import java.util.Scanner;
 
+import com.satoshi.taskboard.dto.BoardColumnInfoDTO;
 import com.satoshi.taskboard.persistence.config.ConnectionConfig;
 import com.satoshi.taskboard.persistence.entity.BoardColumnEntity;
 import com.satoshi.taskboard.persistence.entity.BoardEntity;
@@ -72,7 +73,17 @@ public class BoardMenu {
         }
     }
 
-    private void moveCardToNextColumn() {
+    private void moveCardToNextColumn() throws SQLException {
+        System.out.println("Informe o id do card que deseja mover para a próxima coluna");
+        var cardId = scanner.nextLong();
+        var boardColumnsInfo = entity.getBoardColumns().stream()
+                .map(bc -> new BoardColumnInfoDTO(bc.getId(), bc.getOrder(), bc.getKind()))
+                .toList();
+        try(var connection = getConnection()){
+            new CardService(connection).moveToNextColumn(cardId, boardColumnsInfo);
+        } catch (RuntimeException ex){
+            System.out.println(ex.getMessage());
+        }
     }
 
     private void blockCard() {
