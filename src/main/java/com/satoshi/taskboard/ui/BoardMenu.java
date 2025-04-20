@@ -4,7 +4,9 @@ import java.sql.SQLException;
 import java.util.Scanner;
 
 import com.satoshi.taskboard.persistence.config.ConnectionConfig;
+import com.satoshi.taskboard.persistence.entity.BoardColumnEntity;
 import com.satoshi.taskboard.persistence.entity.BoardEntity;
+import com.satoshi.taskboard.service.BoardColumnQueryService;
 import com.satoshi.taskboard.service.BoardQueryService;
 
 import lombok.AllArgsConstructor;
@@ -90,7 +92,22 @@ public class BoardMenu {
         }
     }
 
-    private void showColumn() {
+    private void showColumn() throws SQLException {
+        var columnsIds = entity.getBoardColumns().stream().map(BoardColumnEntity::getId).toList();
+        var selectedColumn = -1L;
+        while (!columnsIds.contains(selectedColumn)){
+            System.out.printf("Escolha uma coluna do board %s\n", entity.getName());
+            entity.getBoardColumns().forEach(c -> System.out.printf("%s - %s [%s]\n", c.getId(), c.getName(), c.getKind()));
+            selectedColumn = scanner.nextLong();
+        }
+        try(var connection = ConnectionConfig.getConnection()){
+            var column = new BoardColumnQueryService(connection).findById(selectedColumn);
+            column.ifPresent(co -> {
+                System.out.printf("Coluna %s tipo %s\n", co.getName(), co.getKind());
+                co.getCards().forEach(ca -> System.out.printf("Card %s - %s\nDescrição: %s",
+                        ca.getId(), ca.getTitle(), ca.getDescription()));
+            });
+        }
     }
 
     private void showCard() {
